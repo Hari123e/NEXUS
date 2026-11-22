@@ -177,6 +177,9 @@ function showSection(section, button) {
 
     document.getElementById("sectionTitle").textContent =
         titles[section] || "NEXUS";
+    if (section === "contacts") {
+    loadContacts();
+}
 }
 
 // ==========================================
@@ -324,9 +327,304 @@ function demoNotice() {
     showToast("This feature is coming soon!");
 }
 
+
+// ==========================================
+// CONTACTS SYSTEM
+// ==========================================
+
+const addContactForm = document.getElementById("addContactForm");
+
+if (addContactForm) {
+    addContactForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const input = document.getElementById("contactUsername");
+        const username = input.value.trim();
+
+        if (!username) return;
+
+        const button = addContactForm.querySelector("button");
+        button.disabled = true;
+
+        try {
+            const result = await apiRequest("/api/contacts/requests", {
+                method: "POST",
+                body: JSON.stringify({ username })
+            });
+
+            input.value = "";
+
+            showToast(result.message || "Request sent!");
+
+            await loadContacts();
+
+        } catch (error) {
+            showToast(error.message);
+        } finally {
+            button.disabled = false;
+        }
+    });
+}
+
+
+// CREATE CONTACT ITEM
+
+function createContactItem(username, subtitle, buttons = []) {
+    const item = document.createElement("div");
+    item.className = "contact-item";
+
+    const info = document.createElement("div");
+    info.className = "contact-info";
+
+    const avatar = document.createElement("div");
+    avatar.className = "contact-avatar";
+    avatar.textContent = username.charAt(0).toUpperCase();
+
+    const details = document.createElement("div");
+    details.className = "contact-details";
+
+    const name = document.createElement("strong");
+    name.textContent = username;
+
+    const description = document.createElement("small");
+    description.textContent = subtitle;
+
+    details.append(name, description);
+    info.append(avatar, details);
+
+    const actions = document.createElement("div");
+    actions.className = "contact-actions";
+
+    buttons.forEach((buttonInfo) => {
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.className =
+            "contact-action-btn " + (buttonInfo.style || "");
+
+        button.textContent = buttonInfo.label;
+
+        button.addEventListener("click", buttonInfo.action);
+
+        actions.appendChild(button);
+    });
+
+    item.append(info, actions);
+
+    return item;
+}
+
+
+// SHOW EMPTY MESSAGE
+
+function showContactEmpty(container, message) {
+    container.replaceChildren();
+
+    const text = document.createElement("p");
+    text.className = "contact-muted";
+    text.textContent = message;
+
+    container.appendChild(text);
+}
+
+
+// LOAD ALL CONTACT DATA
+
+async function loadContacts() {
+    const contactList = document.getElementById("contactList");
+    const incomingList = document.getElementById("incomingRequests");
+    const outgoingList = document.getElementById("outgoingRequests");
+
+    if (!contactList || !incomingList || !outgoingList) return;
+
+    try {
+        const [contactsData, requestsData] = await Promise.all([
+            apiRequest("/api/contacts"),
+            apiRequest("/api/contacts/requests")
+        ]);
+
+        renderContactList(contactsData.contacts || []);
+        renderIncomingRequests(requestsData.incoming || []);
+        renderOutgoingRequests(requestsData.outgoing || []);
+
+    } catch (error) {
+        showContactEmpty(contactList, error.message);
+        showContactEmpty(incomingList, "Could not load requests.");
+        showContactEmpty(outgoingList, "Could not load requests.");
+    }
+}
+
+
+// RENDER ACCEPTED CONTACTS
+
+function renderContactList(contacts) {
+    const container = document.getElementById("contactList");
+    container.replaceChildren();
+
+    if (!contacts.length) {
+        showContactEmpty(container, "No contacts yet. Add someone using their username.");
+        return;
+    }
+
+    contacts.forEach((contact) => {
+        const item = createContactItem(
+            contact.username,
+            "NEXUS contact",
+            [
+                {
+                    label: "Remove",
+                    style: "danger",
+                    action: async () => {
+                        const confirmed = confirm(
+                            "Remove " + contact.username + " from your contacts?"
+                        );
+
+                        if (!confirmed) return;
+
+                        try {
+                            const result = await apiRequest(
+                                "/api/contacts/" + encodeURIComponent(contact.id),
+                                { method: "DELETE" }
+                            );
+
+                            showToast(result.message);
+                            await loadContacts();
+
+                        } catch (error) {
+                            showToast(error.message);
+                        }
+                    }
+                }
+            ]
+        );
+
+        container.appendChild(item);
+    });
+}
+
+
+// RENDER INCOMING REQUESTS
+
+function renderIncomingRequests(requests) {
+    const container = document.getElementById("incomingRequests");
+    container.replaceChildren();
+
+    if (!requests.length) {
+        showContactEmpty(container, "No incoming requests.");
+        return;
+    }
+
+    requests.forEach((request) => {
+        const item = createContactItem(
+            request.sender_username,
+            "Wants to connect with you",
+            [
+                {
+                    label: "Accept",
+                    action: () => handleContactRequest(request.id, "accept")
+                },
+                {
+                    label: "Reject",
+                    style: "danger",
+                    action: () => handleContactRequest(request.id, "reject")
+                }
+            ]
+        );
+
+        container.appendChild(item);
+    });
+}
+
+
+// RENDER OUTGOING REQUESTS
+
+function renderOutgoingRequests(requests) {
+    const container = document.getElementById("outgoingRequests");
+    container.replaceChildren();
+
+    if (!requests.length) {
+        showContactEmpty(container, "No outgoing requests.");
+        return;
+    }
+
+    requests.forEach((request) => {
+        const item = createContactItem(
+            request.recipient_username,
+            "Request pending",
+            [
+                {
+                    label: "Cancel",
+                    style: "secondary",
+                    action: () => cancelContactRequest(request.id)
+                }
+            ]
+        );
+
+        container.appendChild(item);
+    });
+}
+
+
+// ACCEPT OR REJECT REQUEST
+
+async function handleContactRequest(requestId, action) {
+    try {
+        const result = await apiRequest(
+            "/api/contacts/requests/" +
+            encodeURIComponent(requestId) +
+            "/" + action,
+            {
+                method: "POST",
+                body: JSON.stringify({})
+            }
+        );
+
+        showToast(result.message);
+
+        await loadContacts();
+
+    } catch (error) {
+        showToast(error.message);
+    }
+}
+
+
+// CANCEL OUTGOING REQUEST
+
+async function cancelContactRequest(requestId) {
+    try {
+        const result = await apiRequest(
+            "/api/contacts/requests/" +
+            encodeURIComponent(requestId) +
+            "/cancel",
+            {
+                method: "POST",
+                body: JSON.stringify({})
+            }
+        );
+
+        showToast(result.message);
+
+        await loadContacts();
+
+    } catch (error) {
+        showToast(error.message);
+    }
+}
+
+
 // ==========================================
 // START APPLICATION
 // ==========================================
+
+document.querySelectorAll("[data-section]").forEach((button) => {
+    button.addEventListener("click", () => {
+        showSection(button.dataset.section, button);
+    });
+});
+
+document.querySelector('[data-action="logout"]')
+    ?.addEventListener("click", logout);
 
 checkSession();
 

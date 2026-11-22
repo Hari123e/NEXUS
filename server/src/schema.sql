@@ -128,6 +128,71 @@ ON audit_logs (actor_user_id);
 CREATE INDEX IF NOT EXISTS audit_logs_created_index
 ON audit_logs (created_at);
 
+-- ==========================================
+-- 6. CONTACT REQUESTS
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS contact_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    sender_id UUID NOT NULL
+        REFERENCES users(id) ON DELETE CASCADE,
+
+    recipient_id UUID NOT NULL
+        REFERENCES users(id) ON DELETE CASCADE,
+
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (
+            status IN (
+                'pending',
+                'accepted',
+                'rejected',
+                'cancelled'
+            )
+        ),
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CHECK (sender_id <> recipient_id)
+);
+
+CREATE INDEX IF NOT EXISTS contact_requests_recipient_index
+ON contact_requests (recipient_id, status);
+
+CREATE INDEX IF NOT EXISTS contact_requests_sender_index
+ON contact_requests (sender_id, status);
+
+CREATE UNIQUE INDEX IF NOT EXISTS unique_pending_contact_request
+ON contact_requests (
+    LEAST(sender_id, recipient_id),
+    GREATEST(sender_id, recipient_id)
+)
+WHERE status = 'pending';
+
+
+-- ==========================================
+-- 7. ACCEPTED CONTACTS
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS contacts (
+    user_id UUID NOT NULL
+        REFERENCES users(id) ON DELETE CASCADE,
+
+    contact_user_id UUID NOT NULL
+        REFERENCES users(id) ON DELETE CASCADE,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    PRIMARY KEY (user_id, contact_user_id),
+
+    CHECK (user_id <> contact_user_id)
+);
+
+CREATE INDEX IF NOT EXISTS contacts_contact_user_index
+ON contacts (contact_user_id);
+
 
 -- ==========================================
 -- END OF NEXUS SCHEMA

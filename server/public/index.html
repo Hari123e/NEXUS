@@ -77,41 +77,34 @@
         </div>
 
         <nav>
-
-            <button class="nav-item active"
-                onclick="showSection('chats',this)">
+            <button class="nav-item active" data-section="chats">
                 ◈ <span>Chats</span>
             </button>
 
-            <button class="nav-item"
-                onclick="showSection('contacts',this)">
+            <button class="nav-item" data-section="contacts">
                 ♙ <span>Contacts</span>
             </button>
 
-            <button class="nav-item"
-                onclick="showSection('groups',this)">
+            <button class="nav-item" data-section="groups">
                 ◉ <span>Groups</span>
             </button>
 
-            <button class="nav-item"
-                onclick="showSection('calls',this)">
+            <button class="nav-item" data-section="calls">
                 ◖ <span>Calls</span>
             </button>
 
         </nav>
 
         <div class="sidebar-bottom">
-
-            <button class="nav-item"
-                onclick="showSection('settings',this)">
+            <button class="nav-item" data-section="settings">
                 ⚙ <span>Settings</span>
             </button>
 
-            <button class="nav-item logout"
-                onclick="logout()">
+            <button class="nav-item logout" data-action="logout">
                 ↪ <span>Log out</span>
             </button>
 
+        </div>
         </div>
 
     </aside>
@@ -260,25 +253,66 @@
         </section>
 
 
-        <!-- CONTACTS -->
 
-        <section id="contacts" class="content-section hidden">
 
-            <div class="section-card">
-                <h3>Your Contacts</h3>
-                <p>Connect with people using their NEXUS username.</p>
+<!-- CONTACTS -->
 
-                <input class="search-box"
-                    placeholder="Search username...">
+<section id="contacts" class="content-section hidden">
 
-                <div class="empty-state">
-                    <div>♙</div>
-                    <h3>No contacts yet</h3>
-                    <p>Your contacts will appear here.</p>
-                </div>
+    <div class="section-card">
+
+        <h3>Your Contacts</h3>
+        <p>Connect privately with people using their NEXUS username.</p>
+
+        <form id="addContactForm" class="contact-add-form">
+
+            <input
+                id="contactUsername"
+                type="text"
+                class="search-box"
+                placeholder="Enter exact NEXUS username..."
+                minlength="3"
+                maxlength="30"
+                pattern="[a-zA-Z0-9_]+"
+                required
+            >
+
+            <button type="submit" class="primary-btn">
+                + Add Contact
+            </button>
+
+        </form>
+
+        <div class="contact-panel">
+
+            <h3>Incoming Requests</h3>
+            <div id="incomingRequests" class="contact-list">
+                <p class="contact-muted">Loading requests...</p>
             </div>
 
-        </section>
+        </div>
+
+        <div class="contact-panel">
+
+            <h3>Outgoing Requests</h3>
+            <div id="outgoingRequests" class="contact-list">
+                <p class="contact-muted">Loading requests...</p>
+            </div>
+
+        </div>
+
+        <div class="contact-panel">
+
+            <h3>Connected Contacts</h3>
+            <div id="contactList" class="contact-list">
+                <p class="contact-muted">Loading contacts...</p>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
 
 
         <!-- GROUPS -->

@@ -7,6 +7,8 @@ import { rateLimit } from "express-rate-limit";
 import authRouter from "./routes/auth.js";
 import cookieParser from "cookie-parser";
 import adminRouter from "./routes/admin.js";
+import contactsRouter from "./routes/contacts.js";
+import { requireUser } from "./middleware/requireUser.js";
 
 dotenv.config();
 
@@ -47,3 +49,4 @@ app.use("/api/admin", adminRouter);
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`NEXUS server running on port ${PORT}`);
 });
+app.use("/api/contacts", requireUser, contactsRouter);
