@@ -1,0 +1,526 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#090d16">
+
+    <title>NEXUS | Super Admin</title>
+
+    <link rel="stylesheet" href="admin.css">
+    <script src="admin.js" defer></script>
+</head>
+
+<body>
+
+<!-- ================= ADMIN LOGIN ================= -->
+
+<section id="adminLogin" class="admin-login">
+
+    <div class="brand">
+        <div class="brand-icon">N</div>
+        <h1>NEXUS</h1>
+        <p>SUPER ADMINISTRATION</p>
+    </div>
+
+    <div class="login-box">
+
+        <span class="security-icon">◆</span>
+
+        <h2>Administrator Access</h2>
+        <p>Secure access to your private network.</p>
+
+        <form id="adminForm">
+
+            <label for="adminUsername">Username</label>
+
+            <input
+                type="text"
+                id="adminUsername"
+                name="username"
+                placeholder="Administrator username"
+                autocomplete="username"
+                maxlength="30"
+                required
+            >
+
+            <label for="adminPassword">Password</label>
+
+            <input
+                type="password"
+                id="adminPassword"
+                name="password"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                required
+            >
+
+            <button type="submit" id="adminLoginButton">
+                Secure Login
+            </button>
+
+        </form>
+
+        <p class="security-note">
+            <span>◆</span>
+            Protected administrator environment.
+        </p>
+
+        <a href="/" class="back-link">
+            ← Return to NEXUS
+        </a>
+
+    </div>
+
+</section>
+
+
+<!-- ================= ADMIN DASHBOARD ================= -->
+
+<section id="adminDashboard" class="dashboard hidden">
+
+    <!-- SIDEBAR -->
+
+    <aside class="admin-sidebar">
+
+        <div class="side-brand">
+            <div class="brand-icon">N</div>
+            <span>NEXUS</span>
+        </div>
+
+        <p class="menu-label">ADMINISTRATION</p>
+
+        <nav class="admin-navigation">
+
+            <button class="side-link active"
+                type="button"
+                data-section="overview">
+                ◈ <span>Overview</span>
+            </button>
+
+            <button class="side-link"
+                type="button"
+                data-section="users">
+                ♙ <span>User Management</span>
+            </button>
+
+            <button class="side-link"
+                type="button"
+                data-section="invitations">
+                ✉ <span>Invitations</span>
+            </button>
+
+            <button class="side-link"
+                type="button"
+                data-section="groups">
+                ◉ <span>Groups</span>
+            </button>
+
+            <button class="side-link"
+                type="button"
+                data-section="devices">
+                ▣ <span>Devices</span>
+            </button>
+
+            <button class="side-link"
+                type="button"
+                data-section="security">
+                ◆ <span>Security Centre</span>
+            </button>
+
+        </nav>
+
+        <div class="side-bottom">
+
+            <button class="side-link"
+                type="button"
+                data-section="settings">
+                ⚙ <span>System Settings</span>
+            </button>
+
+            <button class="side-link logout"
+                type="button"
+                id="adminLogoutButton">
+                ↪ <span>Logout</span>
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+
+    <main class="admin-main">
+
+        <header class="admin-header">
+
+            <div>
+                <h2 id="adminTitle">Overview</h2>
+                <p>Manage your private NEXUS network.</p>
+            </div>
+
+            <div class="admin-profile">
+
+                <div class="admin-avatar">S</div>
+
+                <div>
+                    <h4 id="adminProfileUsername">Super Admin</h4>
+                    <p>Administrator</p>
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- ================= OVERVIEW ================= -->
+
+        <section id="overview" class="admin-section">
+
+            <div class="welcome-banner">
+
+                <div>
+                    <h2>Welcome, Administrator.</h2>
+                    <p>Your private network at a glance.</p>
+                </div>
+
+                <span id="systemStatus">● CONNECTING</span>
+
+            </div>
+
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <p>Total Users</p>
+                    <h2 id="totalUsers">--</h2>
+                    <span>Registered accounts</span>
+                </div>
+
+                <div class="stat-card">
+                    <p>Active Users</p>
+                    <h2 id="activeUsers">--</h2>
+                    <span>Enabled accounts</span>
+                </div>
+
+                <div class="stat-card">
+                    <p>Total Groups</p>
+                    <h2 id="totalGroups">--</h2>
+                    <span>Created groups</span>
+                </div>
+
+                <div class="stat-card">
+                    <p>Invitations</p>
+                    <h2 id="totalInvitations">--</h2>
+                    <span>Generated invitations</span>
+                </div>
+
+            </div>
+
+
+            <div class="panel">
+
+                <h3>System Information</h3>
+
+                <div class="info-row">
+                    <span>Platform</span>
+                    <strong>NEXUS</strong>
+                </div>
+
+                <div class="info-row">
+                    <span>Administrator</span>
+                    <strong id="overviewAdminUsername">--</strong>
+                </div>
+
+                <div class="info-row">
+                    <span>Backend</span>
+                    <strong id="backendStatus">Checking...</strong>
+                </div>
+
+                <div class="info-row">
+                    <span>Database</span>
+                    <strong id="databaseStatus">Not verified</strong>
+                </div>
+
+                <div class="info-row">
+                    <span>End-to-end encryption</span>
+                    <strong>Not configured</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= USERS ================= -->
+
+        <section id="users" class="admin-section hidden">
+
+            <div class="panel">
+
+                <div class="section-heading">
+                    <div>
+                        <h3>User Management</h3>
+                        <p>Manage registered NEXUS accounts.</p>
+                    </div>
+
+                    <span id="userCount">0 users</span>
+                </div>
+
+                <input
+                    type="search"
+                    class="admin-search"
+                    id="userSearch"
+                    placeholder="Search username..."
+                    autocomplete="off"
+                    maxlength="30"
+                >
+
+                <div id="userList" class="data-list">
+
+                    <div class="empty">
+                        <h3>Loading users...</h3>
+                        <p>User information will appear here.</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= INVITATIONS ================= -->
+
+        <section id="invitations" class="admin-section hidden">
+
+            <div class="panel">
+
+                <div class="section-heading">
+                    <div>
+                        <h3>Invitation Management</h3>
+                        <p>Control who can join NEXUS.</p>
+                    </div>
+                </div>
+
+
+                <div class="invitation-form">
+
+                    <h4>Create Invitation</h4>
+
+                    <label for="invitationMaxUses">
+                        Maximum Uses
+                    </label>
+
+                    <input
+                        type="number"
+                        id="invitationMaxUses"
+                        min="1"
+                        max="100"
+                        value="1"
+                    >
+
+                    <label for="invitationExpiry">
+                        Expiry (Hours)
+                    </label>
+
+                    <input
+                        type="number"
+                        id="invitationExpiry"
+                        min="1"
+                        max="720"
+                        value="72"
+                    >
+
+                    <button
+                        class="action-btn"
+                        type="button"
+                        id="createInvitationButton">
+                        + Generate Invitation
+                    </button>
+
+                </div>
+
+
+                <div id="invitationTokenOutput" class="token-output hidden">
+
+                    <h4>New Invitation Token</h4>
+
+                    <p>
+                        This token is displayed only once.
+                        Store it securely.
+                    </p>
+
+                    <code id="newInvitationToken"></code>
+
+                    <button
+                        type="button"
+                        id="copyInvitationToken">
+                        Copy Token
+                    </button>
+
+                </div>
+
+
+                <div class="list-heading">
+                    <h4>Existing Invitations</h4>
+                    <span id="invitationCount">0 invitations</span>
+                </div>
+
+                <div id="invitationList" class="data-list">
+
+                    <div class="empty">
+                        <h3>Loading invitations...</h3>
+                        <p>Invitation records will appear here.</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= GROUPS ================= -->
+
+        <section id="groups" class="admin-section hidden">
+
+            <div class="panel">
+
+                <h3>Group Management</h3>
+
+                <p>
+                    Manage private groups and group membership.
+                </p>
+
+                <div class="empty">
+                    <h3>Group management unavailable</h3>
+                    <p>
+                        Group messaging infrastructure
+                        has not been connected yet.
+                    </p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= DEVICES ================= -->
+
+        <section id="devices" class="admin-section hidden">
+
+            <div class="panel">
+
+                <h3>Device Management</h3>
+
+                <p>Manage trusted devices and verification.</p>
+
+                <div class="empty">
+                    <h3>Device management unavailable</h3>
+                    <p>
+                        Device registration and verification
+                        are not connected yet.
+                    </p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= SECURITY ================= -->
+
+        <section id="security" class="admin-section hidden">
+
+            <div class="panel">
+
+                <h3>Security Centre</h3>
+
+                <div class="info-row">
+                    <span>Password hashing</span>
+                    <strong>Argon2id configured</strong>
+                </div>
+
+                <div class="info-row">
+                    <span>Admin authentication</span>
+                    <strong>Session protected</strong>
+                </div>
+
+                <div class="info-row">
+                    <span>Invitation security</span>
+                    <strong>SHA-256 token hashes</strong>
+                </div>
+
+                <div class="info-row">
+                    <span>Audit logging</span>
+                    <strong>Backend integrated</strong>
+                </div>
+
+                <div class="info-row">
+                    <span>End-to-end encryption</span>
+                    <strong>Not configured</strong>
+                </div>
+
+                <div class="info-row">
+                    <span>Private message access</span>
+                    <strong>Not available to admin</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= SETTINGS ================= -->
+
+        <section id="settings" class="admin-section hidden">
+
+            <div class="panel">
+
+                <h3>System Settings</h3>
+
+                <div class="info-row">
+                    <span>Registration Mode</span>
+                    <strong>Invitation Only</strong>
+                </div>
+
+                <div class="info-row">
+                    <span>Public Directory</span>
+                    <strong>Disabled</strong>
+                </div>
+
+                <div class="info-row">
+                    <span>Admin Message Access</span>
+                    <strong>Disabled</strong>
+                </div>
+
+                <div class="info-row">
+                    <span>Platform</span>
+                    <strong>NEXUS Private Network</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</section>
+
+
+<!-- ================= NOTIFICATIONS ================= -->
+
+<div
+    id="adminToast"
+    class="toast"
+    role="status"
+    aria-live="polite">
+</div>
+
+</body>
+</html>
+

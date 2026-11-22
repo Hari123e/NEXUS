@@ -1,0 +1,20 @@
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build output
+dist/
+**/dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Local authentication test files
+server/nexus-cookies.txt

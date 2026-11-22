@@ -1,0 +1,131 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    background: #090d16;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 410px;
+}
+
+.logo {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo-icon {
+    width: 60px;
+    height: 60px;
+    margin: auto auto 15px;
+    background: #172b49;
+    border: 1px solid #315b91;
+    border-radius: 17px;
+    display: grid;
+    place-items: center;
+    color: #65b5ff;
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.logo h1 {
+    letter-spacing: 7px;
+}
+
+.logo p {
+    color: #72839a;
+    font-size: 10px;
+    letter-spacing: 3px;
+    margin-top: 9px;
+}
+
+.register-card {
+    background: #111927;
+    border: 1px solid #26364b;
+    border-radius: 17px;
+    padding: 27px;
+}
+
+.register-card h2 {
+    font-size: 23px;
+}
+
+.subtitle {
+    color: #8292a8;
+    font-size: 12px;
+    margin: 10px 0 25px;
+}
+
+form label {
+    display: block;
+    font-size: 13px;
+    margin: 17px 0 9px;
+    color: #b7c3d3;
+}
+
+form input {
+    width: 100%;
+    padding: 14px;
+    background: #090f1a;
+    border: 1px solid #26364b;
+    border-radius: 8px;
+    color: white;
+    outline: none;
+}
+
+form input:focus {
+    border-color: #429cff;
+}
+
+form button {
+    width: 100%;
+    padding: 15px;
+    margin-top: 25px;
+    background: #2479df;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+}
+
+.login-link {
+    text-align: center;
+    font-size: 12px;
+    color: #8292a8;
+    margin-top: 25px;
+}
+
+.login-link a {
+    color: #65b5ff;
+    text-decoration: none;
+}
+
+footer {
+    text-align: center;
+    color: #64758b;
+    font-size: 11px;
+    margin-top: 25px;
+}
+
+.notice {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1d3856;
+    padding: 13px 20px;
+    border-radius: 9px;
+    font-size: 12px;
+}
