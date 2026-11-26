@@ -83,9 +83,13 @@ form.addEventListener("submit", async (event) => {
         form.reset();
 
         showNotice(
-            "Your NEXUS account has been created successfully! You can now log in.",
+            "Account created successfully! Redirecting to login...",
             "success"
         );
+
+        setTimeout(() => {
+            window.location.href = "/";
+        }, 2000);
 
     } catch (error) {
         showNotice(error.message);
