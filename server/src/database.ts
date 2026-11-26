@@ -1,7 +1,7 @@
+
 import { Pool } from "pg";
 import { parse } from "pg-connection-string";
 import { resolve4 } from "node:dns/promises";
-import { createRequire } from "node:module";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -14,27 +14,35 @@ export async function getPool(): Promise<Pool> {
   const databaseUrl = process.env.DATABASE_URL;
 
   if (!databaseUrl) {
-    throw new Error("DATABASE_URL is missing from .env");
+    throw new Error("DATABASE_URL is missing");
   }
 
   const config = parse(databaseUrl);
+  const originalHost = config.host;
 
-  if (!config.host) {
+  if (!originalHost) {
     throw new Error("Database hostname is missing");
   }
 
-  const originalHost = config.host;
-  const addresses = await resolve4(originalHost);
-  const databaseIP = addresses[0];
+  let databaseHost = originalHost;
 
-  if (!databaseIP) {
-    throw new Error("Could not resolve database hostname");
+  // Keep the DNS workaround for local Termux development.
+  // Render uses normal DNS resolution.
+  if (process.env.NODE_ENV !== "production") {
+    const addresses = await resolve4(originalHost);
+    databaseHost = addresses[0];
+
+    if (!databaseHost) {
+      throw new Error("Could not resolve database hostname");
+    }
+
+    console.log("Neon hostname resolved using local DNS workaround.");
+  } else {
+    console.log("Using normal production DNS for Neon.");
   }
 
-  console.log("Neon hostname resolved successfully.");
-
   pool = new Pool({
-    host: databaseIP,
+    host: databaseHost,
     port: config.port ? Number(config.port) : 5432,
     database: config.database ?? undefined,
     user: config.user,

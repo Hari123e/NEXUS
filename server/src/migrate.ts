@@ -14,6 +14,7 @@ async function migrate() {
 
     try {
       await pool.query(schema);
+      await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ");
       await pool.query("COMMIT");
 
       console.log("\nNEXUS DATABASE MIGRATION SUCCESSFUL!");

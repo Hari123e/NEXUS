@@ -197,3 +197,93 @@ ON contacts (contact_user_id);
 -- ==========================================
 -- END OF NEXUS SCHEMA
 -- ==========================================
+
+-- ==========================================
+-- 8. CONVERSATIONS
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS conversations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    type VARCHAR(20) NOT NULL DEFAULT 'direct'
+        CHECK (type IN ('direct', 'group')),
+
+    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+
+    direct_user_low UUID REFERENCES users(id) ON DELETE CASCADE,
+    direct_user_high UUID REFERENCES users(id) ON DELETE CASCADE,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_message_at TIMESTAMPTZ,
+
+    CHECK (
+        (
+            type = 'direct'
+            AND direct_user_low IS NOT NULL
+            AND direct_user_high IS NOT NULL
+            AND direct_user_low < direct_user_high
+        )
+        OR
+        (
+            type = 'group'
+            AND direct_user_low IS NULL
+            AND direct_user_high IS NULL
+        )
+    )
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS unique_direct_conversation
+ON conversations (direct_user_low, direct_user_high)
+WHERE type = 'direct';
+
+
+-- ==========================================
+-- 9. CONVERSATION MEMBERS
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS conversation_members (
+    conversation_id UUID NOT NULL
+        REFERENCES conversations(id) ON DELETE CASCADE,
+
+    user_id UUID NOT NULL
+        REFERENCES users(id) ON DELETE CASCADE,
+
+    joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_read_at TIMESTAMPTZ,
+    left_at TIMESTAMPTZ,
+
+    PRIMARY KEY (conversation_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS conversation_members_user_index
+ON conversation_members (user_id);
+
+
+-- ==========================================
+-- 10. MESSAGES
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    conversation_id UUID NOT NULL
+        REFERENCES conversations(id) ON DELETE CASCADE,
+
+    sender_id UUID NOT NULL
+        REFERENCES users(id) ON DELETE CASCADE,
+
+    body TEXT NOT NULL
+        CHECK (char_length(body) BETWEEN 1 AND 4000),
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    edited_at TIMESTAMPTZ,
+    deleted_at TIMESTAMPTZ,
+    delivered_at TIMESTAMPTZ
+);
+
+CREATE INDEX IF NOT EXISTS messages_conversation_time_index
+ON messages (conversation_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS messages_sender_index
+ON messages (sender_id);

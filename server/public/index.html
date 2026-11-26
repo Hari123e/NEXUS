@@ -1,410 +1,251 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#090d16">
-
-    <title>NEXUS | Private Messenger</title>
-
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090a12">
+  <title>NEXUS | Private Messenger</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="nexus-style.css">
+  <script src="script.js" defer></script>
 </head>
-
 <body>
 
-<!-- LOGIN PAGE -->
-
-<section id="loginPage" class="login-page">
-
-    <div class="logo">
-        <div class="logo-icon">N</div>
-        <h1>NEXUS</h1>
-        <p>PRIVATE COMMUNICATION</p>
+  <!-- LOGIN -->
+  <section id="loginPage" class="login-page">
+    <div class="login-brand">
+      <div class="brand-icon">N</div>
+      <h1>NEXUS</h1>
+      <p>PRIVATE COMMUNICATION</p>
     </div>
 
     <div class="login-card">
+      <h2>Welcome back.</h2>
+      <p class="subtitle">Your conversations. Your privacy.</p>
 
-        <h2>Welcome back.</h2>
-        <p class="subtitle">Your conversations. Your privacy.</p>
+      <form id="loginForm">
+        <label for="username">Username</label>
+        <input id="username" type="text" placeholder="Enter username" autocomplete="username" required>
 
-        <form id="loginForm">
+        <label for="password">Password</label>
+        <input id="password" type="password" placeholder="Enter password" autocomplete="current-password" required>
 
-            <label>Username</label>
-            <input id="username" type="text"
-                placeholder="Enter username" required>
+        <button class="primary-btn" type="submit">Sign In</button>
+        <p id="loginError" class="form-error"></p>
+      </form>
 
-            <label>Password</label>
-            <input id="password" type="password"
-                placeholder="Enter password" required>
-
-            <button class="primary-btn">Sign In</button>
-
-        </form>
-        <p class="register">
-    Have an invitation?
-    <a href="register.html">Create account</a>
-        </p>
-
+      <p class="register">Have an invitation? <a href="register.html">Create account</a></p>
     </div>
 
-    <a href="admin.html" class="admin-link">
-    Administrator Access
-    </a>
+    <a href="admin.html" class="admin-link">Administrator Access</a>
+  </section>
 
-</section>
-
-
-<!-- MAIN APPLICATION -->
-
-<section id="appPage" class="app-page hidden">
-
-    <!-- SIDEBAR -->
+  <!-- MAIN APPLICATION -->
+  <section id="appPage" class="app-page hidden">
 
     <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon small">N</div>
+        <span>NEXUS</span>
+      </div>
 
-        <div class="app-brand">
-            <div class="small-logo">N</div>
-            <span>NEXUS</span>
+      <div class="profile-card">
+        <div class="avatar" id="profileAvatar">N</div>
+        <div>
+          <strong id="profileName">User</strong>
+          <small>Personal account</small>
         </div>
+      </div>
 
-        <div class="profile-mini">
-            <div class="avatar">H</div>
+      <nav class="navigation">
+        <button class="nav-btn active" data-section="chats" type="button">
+          <span>▣</span> Chats
+        </button>
+        <button class="nav-btn" data-section="contacts" type="button">
+          <span>♧</span> Contacts
+        </button>
+        <button class="nav-btn" data-section="groups" type="button">
+          <span>◉</span> Groups
+        </button>
+        <button class="nav-btn" data-section="calls" type="button">
+          <span>⌕</span> Calls
+        </button>
+        <button class="nav-btn" data-section="settings" type="button">
+          <span>⚙</span> Settings
+        </button>
+      </nav>
 
-            <div>
-                <h3 id="profileName">User</h3>
-                <p>My Account</p>
-            </div>
+      <div class="sidebar-bottom">
+        <div class="connection-indicator">
+          <span id="connectionDot"></span>
+          <span id="connectionStatus">Connecting...</span>
         </div>
-
-        <nav>
-            <button class="nav-item active" data-section="chats">
-                ◈ <span>Chats</span>
-            </button>
-
-            <button class="nav-item" data-section="contacts">
-                ♙ <span>Contacts</span>
-            </button>
-
-            <button class="nav-item" data-section="groups">
-                ◉ <span>Groups</span>
-            </button>
-
-            <button class="nav-item" data-section="calls">
-                ◖ <span>Calls</span>
-            </button>
-
-        </nav>
-
-        <div class="sidebar-bottom">
-            <button class="nav-item" data-section="settings">
-                ⚙ <span>Settings</span>
-            </button>
-
-            <button class="nav-item logout" data-action="logout">
-                ↪ <span>Log out</span>
-            </button>
-
-        </div>
-        </div>
-
+        <button class="logout-btn" data-action="logout" type="button">Log out</button>
+      </div>
     </aside>
 
+    <main class="main-area">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">YOUR PRIVATE SPACE</p>
+          <h2 id="sectionTitle">Messages</h2>
+        </div>
+<div class="topbar-actions">
+  <div class="topbar-avatar" id="topbarAvatar">N</div>
+  <button class="logout-btn mobile-logout" data-action="logout" type="button">Log out</button>
+</div>
+      </header>
 
-    <!-- CONTENT -->
+      <!-- CHATS -->
+      <section id="chats" class="content-section">
+        <div class="chat-layout">
 
-    <main class="main-content">
-
-        <header class="topbar">
-
-            <div>
-                <h2 id="sectionTitle">Chats</h2>
-                <p>Your private space.</p>
+          <div class="chat-list-panel">
+            <div class="panel-heading">
+              <div>
+                <h3>Messages</h3>
+                <p>Your conversations</p>
+              </div>
+              <button id="refreshChats" class="icon-btn" type="button" title="Refresh conversations">↻</button>
             </div>
 
-            <div class="top-actions">
-                <span class="secure-label">● Private Network</span>
-                <div class="avatar">H</div>
+            <input id="searchChat" class="search-input" type="search" placeholder="Search conversations...">
+
+            <div id="conversationList" class="conversation-list">
+              <div class="empty-state">
+                <span>◌</span>
+                <p>Loading conversations...</p>
+              </div>
             </div>
 
-        </header>
+            <form id="openChatForm" class="new-chat-form">
+              <input id="newChatUsername" type="text" placeholder="Contact username" autocomplete="off" required>
+              <button type="submit">Open</button>
+            </form>
+          </div>
 
+          <div class="chat-window">
+            <div id="chatPlaceholder" class="chat-placeholder">
+              <div class="placeholder-logo">N</div>
+              <h2>Your conversations,</h2>
+              <h2 class="accent-text">your privacy.</h2>
+              <p>Select a conversation to start messaging.</p>
+            </div>
 
-        <!-- CHAT SECTION -->
-
-        <section id="chats" class="content-section">
-
-            <div class="chat-layout">
-
-                <div class="chat-list">
-
-                    <div class="chat-heading">
-                        <h3>Messages</h3>
-                        <button onclick="demoNotice()">＋</button>
-                    </div>
-
-                    <input id="searchChat"
-                        class="search-box"
-                        placeholder="Search conversations...">
-
-                    <div id="conversationList">
-
-                        <div class="conversation active"
-                            onclick="openChat('Arun')">
-
-                            <div class="avatar blue">A</div>
-
-                            <div class="conversation-info">
-                                <h4>Arun</h4>
-                                <p>Hey! How are you?</p>
-                            </div>
-
-                            <span class="time">9:30</span>
-
-                        </div>
-
-                        <div class="conversation"
-                            onclick="openChat('Rahul')">
-
-                            <div class="avatar purple">R</div>
-
-                            <div class="conversation-info">
-                                <h4>Rahul</h4>
-                                <p>See you tomorrow!</p>
-                            </div>
-
-                            <span class="time">8:45</span>
-
-                        </div>
-
-                        <div class="conversation"
-                            onclick="openChat('Alex')">
-
-                            <div class="avatar green">A</div>
-
-                            <div class="conversation-info">
-                                <h4>Alex</h4>
-                                <p>Thanks bro.</p>
-                            </div>
-
-                            <span class="time">Yesterday</span>
-
-                        </div>
-
-                    </div>
-
+            <div id="activeChat" class="active-chat hidden">
+              <div class="chat-header">
+                <button id="backToChats" class="back-to-chats" type="button" aria-label="Back to chats">←</button>
+                <div class="avatar" id="chatAvatar">U</div>
+                <div class="chat-header-info">
+                  <h3 id="chatName">Contact</h3>
+                  <small id="chatConnection">NEXUS conversation</small>
                 </div>
+              </div>
 
+              <div id="messages" class="messages">
+                <div class="empty-state">No messages yet. Say hello!</div>
+              </div>
 
-                <!-- MESSAGE WINDOW -->
-
-                <div class="chat-window">
-
-                    <div class="chat-header">
-
-                        <div class="avatar blue" id="chatAvatar">A</div>
-
-                        <div>
-                            <h3 id="chatName">Arun</h3>
-                            <p>Demo conversation</p>
-                        </div>
-
-                    </div>
-
-                    <div class="messages" id="messages">
-
-                        <div class="date-label">TODAY</div>
-
-                        <div class="message received">
-                            Hey! How are you?
-                            <span>9:28</span>
-                        </div>
-
-                        <div class="message sent">
-                            I'm good! What about you?
-                            <span>9:29</span>
-                        </div>
-
-                        <div class="message received">
-                            Everything is great!
-                            <span>9:30</span>
-                        </div>
-
-                    </div>
-
-                    <form id="messageForm" class="message-input">
-
-                        <button type="button"
-                            onclick="demoNotice()">＋</button>
-
-                        <input id="messageText"
-                            placeholder="Write a message..."
-                            autocomplete="off">
-
-                        <button type="submit" class="send-btn">
-                            ➤
-                        </button>
-
-                    </form>
-
-                </div>
-
+              <form id="messageForm" class="message-form">
+                <input id="messageText" type="text" maxlength="4000" placeholder="Write a message..." autocomplete="off" required>
+                <button id="sendMessageBtn" type="submit">Send <span>➤</span></button>
+              </form>
             </div>
+          </div>
+        </div>
+      </section>
 
-        </section>
+      <!-- CONTACTS -->
+      <section id="contacts" class="content-section hidden">
+        <div class="section-card">
+          <h3>Find people</h3>
+          <p class="section-description">Connect using a NEXUS username.</p>
 
+          <form id="addContactForm" class="add-contact-form">
+            <input id="contactUsername" type="text" placeholder="Enter username" required>
+            <button class="primary-btn" type="submit">Send request</button>
+          </form>
+        </div>
 
-
-
-<!-- CONTACTS -->
-
-<section id="contacts" class="content-section hidden">
-
-    <div class="section-card">
-
-        <h3>Your Contacts</h3>
-        <p>Connect privately with people using their NEXUS username.</p>
-
-        <form id="addContactForm" class="contact-add-form">
-
-            <input
-                id="contactUsername"
-                type="text"
-                class="search-box"
-                placeholder="Enter exact NEXUS username..."
-                minlength="3"
-                maxlength="30"
-                pattern="[a-zA-Z0-9_]+"
-                required
-            >
-
-            <button type="submit" class="primary-btn">
-                + Add Contact
-            </button>
-
-        </form>
-
-        <div class="contact-panel">
-
-            <h3>Incoming Requests</h3>
+        <div class="contacts-grid">
+          <div class="section-card">
+            <h3>Incoming requests</h3>
             <div id="incomingRequests" class="contact-list">
-                <p class="contact-muted">Loading requests...</p>
+              <p class="contact-muted">Loading...</p>
             </div>
+          </div>
 
-        </div>
-
-        <div class="contact-panel">
-
-            <h3>Outgoing Requests</h3>
+          <div class="section-card">
+            <h3>Sent requests</h3>
             <div id="outgoingRequests" class="contact-list">
-                <p class="contact-muted">Loading requests...</p>
+              <p class="contact-muted">Loading...</p>
             </div>
+          </div>
 
-        </div>
-
-        <div class="contact-panel">
-
-            <h3>Connected Contacts</h3>
+          <div class="section-card">
+            <h3>My contacts</h3>
             <div id="contactList" class="contact-list">
-                <p class="contact-muted">Loading contacts...</p>
+              <p class="contact-muted">Loading...</p>
             </div>
-
+          </div>
         </div>
+      </section>
 
-    </div>
+      <!-- GROUPS -->
+      <section id="groups" class="content-section hidden">
+        <div class="section-card coming-soon">
+          <div class="placeholder-logo">◉</div>
+          <h3>Groups are coming soon</h3>
+          <p>Group conversations will be introduced after direct messaging is complete.</p>
+        </div>
+      </section>
 
-</section>
+      <!-- CALLS -->
+      <section id="calls" class="content-section hidden">
+        <div class="section-card coming-soon">
+          <div class="placeholder-logo">⌕</div>
+          <h3>Calls are coming soon</h3>
+          <p>Voice and video communication will be added in a future update.</p>
+        </div>
+      </section>
 
+      <!-- SETTINGS -->
+      <section id="settings" class="content-section hidden">
+        <div class="section-card">
+          <h3>Settings</h3>
+          <p class="section-description">Your NEXUS account and preferences.</p>
 
-        <!-- GROUPS -->
-
-        <section id="groups" class="content-section hidden">
-
-            <div class="section-card">
-                <h3>Your Groups</h3>
-                <p>Create private spaces for group conversations.</p>
-
-                <button class="primary-btn"
-                    onclick="demoNotice()">＋ Create Group</button>
-
-                <div class="empty-state">
-                    <div>◉</div>
-                    <h3>No groups yet</h3>
-                    <p>Your groups will appear here.</p>
-                </div>
+          <div class="setting-item">
+            <div>
+              <h4>Account</h4>
+              <p id="settingsUsername">Signed in account</p>
             </div>
+          </div>
 
-        </section>
-
-
-        <!-- CALLS -->
-
-        <section id="calls" class="content-section hidden">
-
-            <div class="section-card">
-                <h3>Calls</h3>
-                <p>Your voice and video communication history.</p>
-
-                <div class="empty-state">
-                    <div>◖</div>
-                    <h3>No recent calls</h3>
-                    <p>Your call history will appear here.</p>
-                </div>
+          <div class="setting-item">
+            <div>
+              <h4>Privacy & Security</h4>
+              <p>Your account uses authenticated sessions.</p>
             </div>
+          </div>
 
-        </section>
-
-
-        <!-- SETTINGS -->
-
-        <section id="settings" class="content-section hidden">
-
-            <div class="section-card">
-
-                <h3>Settings</h3>
-
-                <div class="setting-item">
-                    <div>
-                        <h4>Account</h4>
-                        <p>Manage your username and profile.</p>
-                    </div>
-                    <span>›</span>
-                </div>
-
-                <div class="setting-item">
-                    <div>
-                        <h4>Privacy & Security</h4>
-                        <p>Manage privacy and device security.</p>
-                    </div>
-                    <span>›</span>
-                </div>
-
-                <div class="setting-item">
-                    <div>
-                        <h4>Notifications</h4>
-                        <p>Manage notification preferences.</p>
-                    </div>
-                    <span>›</span>
-                </div>
-
-                <div class="setting-item">
-                    <div>
-                        <h4>About NEXUS</h4>
-                        <p>Private communication platform.</p>
-                    </div>
-                    <span>›</span>
-                </div>
-
+          <div class="setting-item">
+            <div>
+              <h4>About NEXUS</h4>
+              <p>Private communication platform.</p>
             </div>
+          </div>
 
-        </section>
-
+          <p class="security-note">
+            Note: End-to-end encryption is not yet implemented. Do not treat current messages as end-to-end encrypted.
+          </p>
+        </div>
+      </section>
     </main>
+  </section>
 
-</section>
-
-<div id="toast" class="toast"></div>
-
-<script src="script.js"></script>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 </body>
 </html>

@@ -18,3 +18,20 @@ npm-debug.log*
 
 # Local authentication test files
 server/nexus-cookies.txt
+server/.matrix-client.json
+# Development backups
+*.backup
+*.pre-redesign
+*.receipts-backup
+*.read-backup
+*.delivery-backup
+server/backup/
+
+# Temporary Matrix experiments
+server/public/matrix/
+server/src/matrix/
+server/src/scripts/register-matrix-client.ts
+
+# Temporary test files
+server/public/chat-test.*
+server/src/check-messaging.ts
