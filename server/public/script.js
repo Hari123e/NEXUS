@@ -881,7 +881,7 @@ function renderContacts(contacts, incoming, outgoing) {
         item.className = "contact-item";
 
         const name = document.createElement("strong");
-        name.textContent = request.username;
+name.textContent = request.sender_username || "Unknown user";
 
         const acceptButton = document.createElement("button");
         acceptButton.textContent = "Accept";
@@ -908,7 +908,7 @@ function renderContacts(contacts, incoming, outgoing) {
         item.className = "contact-item";
 
         const name = document.createElement("strong");
-        name.textContent = request.username;
+name.textContent = request.recipient_username || "Unknown user";
 
         const cancelButton = document.createElement("button");
         cancelButton.textContent = "Cancel";
