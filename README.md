@@ -839,7 +839,19 @@ The goal is to build a messenger that is:
 - Independent of unnecessary external account requirements for ordinary users.
 
 NEXUS — Connect privately. Communicate freely.
+## Copyright and License
 
+Copyright © 2026 NEXUS Project Owner.
+All Rights Reserved.
+
+NEXUS is proprietary software. This repository is
+publicly available for viewing only.
+
+No permission is granted to copy, modify, redistribute,
+or commercially use this software without prior written
+permission from the copyright owner.
+
+See the LICENSE file for details.
 ---
 
 Documentation reflects the project implementation inspected on 26 November 2026. As development continues, update this README whenever features, commands, configuration or deployment requirements change.
