@@ -362,11 +362,49 @@ function renderUsers(users) {
             });
 
             actions.append(statusButton, revokeButton);
+
+            if (user.role === "user") {
+                const deleteButton = document.createElement("button");
+                deleteButton.className = "action-btn";
+                deleteButton.textContent = "Delete Account";
+
+                deleteButton.addEventListener("click", () => {
+                    deleteUser(user.id, user.username);
+                });
+
+                actions.appendChild(deleteButton);
+            }
+
             card.appendChild(actions);
         }
 
         container.appendChild(card);
     });
+}
+
+async function deleteUser(userId, username) {
+    const confirmation = prompt(
+        `Permanently delete @${username}? This removes their account, messages, direct conversations, contacts, devices and sessions. This cannot be undone.\n\nType ${username} to confirm:`
+    );
+
+    if (confirmation === null) return;
+
+    if (confirmation !== username) {
+        adminNotice("Username did not match. Nothing was deleted.", "error");
+        return;
+    }
+
+    try {
+        const result = await apiRequest(
+            `${API.users}/${encodeURIComponent(userId)}`,
+            { method: "DELETE" }
+        );
+
+        adminNotice(result.message || "User permanently deleted.");
+        await loadUsers($("userSearch")?.value.trim() || "");
+    } catch (error) {
+        adminNotice(error.message || "Could not delete user.", "error");
+    }
 }
 
 async function updateUserStatus(userId, isActive) {
@@ -476,6 +514,10 @@ function renderInvitations(invitations) {
         const title = document.createElement("strong");
         title.textContent = "Invitation";
 
+        const creator = document.createElement("p");
+        creator.textContent =
+            `Created by: ${invitation.created_by_username || "Unknown user"}`;
+
         const usage = document.createElement("p");
         usage.textContent =
             `Uses: ${invitation.uses ?? 0} / ${invitation.max_uses ?? 1}`;
@@ -492,7 +534,7 @@ function renderInvitations(invitations) {
         const exhausted =
             Number(invitation.uses) >= Number(invitation.max_uses);
 
-        const revoked = Boolean(invitation.revoked);
+        const revoked = Boolean(invitation.revoked_at);
 
         status.textContent = revoked
             ? "Status: Revoked"
@@ -502,7 +544,7 @@ function renderInvitations(invitations) {
                     ? "Status: Used up"
                     : "Status: Active";
 
-        info.append(title, usage, expiry, status);
+        info.append(title, creator, usage, expiry, status);
         card.appendChild(info);
 
         if (!revoked && !expired && !exhausted) {
@@ -520,7 +562,6 @@ function renderInvitations(invitations) {
         container.appendChild(card);
     });
 }
-
 /* =========================================
    CREATE INVITATION
 ========================================= */
@@ -592,11 +633,21 @@ function displayInvitationToken(token) {
     const output = $("invitationTokenOutput");
     const tokenElement = $("newInvitationToken");
     const copyButton = $("copyInvitationToken");
+    const linkElement = $("newInvitationLink");
+    const copyLinkButton = $("copyInvitationLink");
+    const shareButton = $("shareInvitation");
 
     if (!output || !tokenElement) return;
 
+    const invitationLink =
+        `${window.location.origin}/register.html?invite=${encodeURIComponent(token)}`;
+
     tokenElement.textContent = token;
     output.classList.remove("hidden");
+
+    if (linkElement) {
+        linkElement.textContent = invitationLink;
+    }
 
     if (copyButton) {
         copyButton.onclick = async () => {
@@ -604,15 +655,43 @@ function displayInvitationToken(token) {
                 await navigator.clipboard.writeText(token);
                 adminNotice("Invitation token copied.");
             } catch {
-                adminNotice(
-                    "Copy failed. Select and copy the token manually.",
-                    "error"
-                );
+                adminNotice("Copy failed. Select and copy the token manually.", "error");
+            }
+        };
+    }
+
+    if (copyLinkButton) {
+        copyLinkButton.onclick = async () => {
+            try {
+                await navigator.clipboard.writeText(invitationLink);
+                adminNotice("Invitation link copied.");
+            } catch {
+                adminNotice("Could not copy the invitation link.", "error");
+            }
+        };
+    }
+
+    if (shareButton) {
+        shareButton.onclick = async () => {
+            if (!navigator.share) {
+                adminNotice("Sharing is not supported in this browser. Copy the link instead.", "error");
+                return;
+            }
+
+            try {
+                await navigator.share({
+                    title: "Join me on NEXUS",
+                    text: "Use this invitation link to create your NEXUS account:",
+                    url: invitationLink
+                });
+            } catch (error) {
+                if (error.name !== "AbortError") {
+                    adminNotice("Could not share the invitation link.", "error");
+                }
             }
         };
     }
 }
-
 /* =========================================
    REVOKE INVITATION
 ========================================= */

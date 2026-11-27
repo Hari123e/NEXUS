@@ -1,11 +1,14 @@
 "use strict";
 
 const form = document.getElementById("registerForm");
-const inviteCode = document.getElementById("inviteCode");
 const username = document.getElementById("newUsername");
 const password = document.getElementById("newPassword");
 const confirmPassword = document.getElementById("confirmPassword");
 const notice = document.getElementById("notice");
+
+const invitation = new URLSearchParams(
+    window.location.search
+).get("invite")?.trim() || "";
 
 function showNotice(message, type = "error") {
     notice.textContent = message;
@@ -17,19 +20,34 @@ function setLoading(loading) {
 
     if (!button) return;
 
-    button.disabled = loading;
-    button.textContent = loading ? "Creating account..." : "Create Account";
+    button.disabled = loading || !invitation;
+    button.textContent = loading
+        ? "Creating account..."
+        : "Create Account";
+}
+
+// Check for an invitation link.
+if (!invitation) {
+    showNotice(
+        "A valid invitation link is required to create an account."
+    );
+
+    form.querySelector('button[type="submit"]').disabled = true;
 }
 
 form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const invitation = inviteCode.value.trim();
     const user = username.value.trim();
     const pass = password.value;
     const confirm = confirmPassword.value;
 
-    if (!invitation || !user || !pass || !confirm) {
+    if (!invitation) {
+        showNotice("Please open your invitation link first.");
+        return;
+    }
+
+    if (!user || !pass || !confirm) {
         showNotice("Please complete all fields.");
         return;
     }

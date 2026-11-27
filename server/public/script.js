@@ -17,6 +17,9 @@ const passwordInput = $("#password");
 let currentUser = null;
 let activeConversation = null;
 let conversations = [];
+let groups = [];
+let groupContacts = [];
+let activeGroup = null;
 let socket = null;
 let reconnectTimer = null;
 let intentionalLogout = false;
@@ -187,12 +190,16 @@ async function handleAuthenticatedUser(user) {
 function showLogin() {
     currentUser = null;
     activeConversation = null;
+    activeGroup = null;
 
     appPage.classList.add("hidden");
     loginPage.classList.remove("hidden");
-
-    passwordInput.value = "";
 }
+
+// ==========================================
+// NAVIGATION
+// ==========================================
+
 
 // ==========================================
 // NAVIGATION
@@ -202,7 +209,6 @@ const sectionTitles = {
     chats: "Messages",
     contacts: "Contacts",
     groups: "Groups",
-    calls: "Calls",
     settings: "Settings"
 };
 
@@ -235,6 +241,11 @@ function showSection(section, button) {
     if (section === "chats") {
         loadConversations();
     }
+
+    if (section === "groups") {
+        loadGroups();
+        loadGroupContacts();
+    }
 }
 
 const backToChats = $("#backToChats");
@@ -262,6 +273,8 @@ async function loadConversations() {
 
     try {
         const result = await apiRequest("/api/conversations");
+const groupResult = await apiRequest("/api/groups");
+groups = groupResult.groups || [];
 
         conversations = result.conversations || [];
 
@@ -278,11 +291,12 @@ async function loadConversations() {
     }
 }
 
+
 function renderConversations() {
     const container = $("#conversationList");
     container.replaceChildren();
 
-    if (!conversations.length) {
+    if (!conversations.length && !groups.length) {
         const empty = document.createElement("div");
         empty.className = "empty-state";
         empty.textContent =
@@ -291,54 +305,110 @@ function renderConversations() {
         return;
     }
 
-    conversations.forEach((conversation) => {
+    // Combine groups and direct conversations.
+    const allChats = [
+        ...groups.map(group => ({
+            ...group,
+            isGroup: true
+        })),
+        ...conversations.map(conversation => ({
+            ...conversation,
+            isGroup: false
+        }))
+    ];
+
+    // Sort by latest message activity.
+    allChats.sort((a, b) => {
+        const dateA = new Date(
+            a.last_message_created_at ||
+            a.last_message_at ||
+            a.created_at
+        ).getTime() || 0;
+
+        const dateB = new Date(
+            b.last_message_created_at ||
+            b.last_message_at ||
+            b.created_at
+        ).getTime() || 0;
+
+        return dateB - dateA;
+    });
+
+    allChats.forEach(chat => {
         const item = document.createElement("div");
         item.className = "conversation-item";
 
-        if (activeConversation &&
-            activeConversation.id === conversation.id) {
+        if (activeConversation?.id === chat.id) {
             item.classList.add("active");
         }
 
         const avatar = document.createElement("div");
         avatar.className = "avatar";
-        avatar.textContent =
-            conversation.contact_username.charAt(0).toUpperCase();
+
+        const name = document.createElement("strong");
+        name.textContent = chat.isGroup
+            ? chat.name
+            : chat.contact_username;
+
+        if (chat.isGroup) {
+            avatar.textContent = "👥";
+        } else {
+            avatar.textContent =
+                (chat.contact_username || "?").charAt(0).toUpperCase();
+        }
 
         const details = document.createElement("div");
         details.className = "conversation-details";
-
-        const name = document.createElement("strong");
-        name.textContent = conversation.contact_username;
 
         const nameRow = document.createElement("div");
         nameRow.className = "conversation-name-row";
         nameRow.appendChild(name);
 
-        const unreadCount = Number(conversation.unread_count || 0);
+        const unreadCount = Number(chat.unread_count || 0);
 
         if (unreadCount > 0) {
             const badge = document.createElement("span");
             badge.className = "unread-badge";
             badge.textContent =
                 unreadCount > 99 ? "99+" : String(unreadCount);
+
             nameRow.appendChild(badge);
         }
 
         const preview = document.createElement("p");
-        preview.textContent =
-            conversation.last_message || "Start a conversation";
+
+        if (chat.last_message) {
+            preview.textContent = chat.isGroup
+                ? `${chat.last_message_sender || "Member"}: ${chat.last_message}`
+                : chat.last_message;
+        } else {
+            preview.textContent = chat.isGroup
+                ? (chat.description || "Group conversation")
+                : "Start a conversation";
+        }
 
         details.append(nameRow, preview);
+
+        if (chat.isGroup) {
+            const info = document.createElement("small");
+            info.textContent = `${chat.member_count} members`;
+            details.insertBefore(info, preview);
+        }
+
         item.append(avatar, details);
 
         item.addEventListener("click", () => {
-            openConversation(conversation);
+            if (chat.isGroup) {
+                openGroup(chat);
+            } else {
+                openConversation(chat);
+            }
         });
 
         container.appendChild(item);
     });
 }
+
 
 // OPEN CHAT BY USERNAME
 // ==========================================
@@ -362,19 +432,11 @@ $("#openChatForm").addEventListener("submit", async (event) => {
 
         input.value = "";
 
-        const conversation = result.conversation;
-
         await loadConversations();
 
-        const saved = conversations.find(
-            (item) => item.id === conversation.id
-        );
+        const conversation = result.conversation;
 
-        await openConversation(saved || {
-            id: conversation.id,
-            contact_id: conversation.contact_id,
-            contact_username: conversation.contact_username
-        });
+        await openConversation(conversation);
 
         showToast("Conversation opened.");
 
@@ -389,10 +451,26 @@ $("#openChatForm").addEventListener("submit", async (event) => {
 // OPEN CONVERSATION
 // ==========================================
 
+
+async function openGroup(group) {
+    if (!group || !group.id) return;
+
+    activeGroup = group;
+
+    await openConversation({
+        id: group.id,
+        contact_username: group.name,
+        isGroup: true,
+        member_count: group.member_count
+    });
+}
+
+
 async function openConversation(conversation) {
     if (!conversation || !conversation.id) return;
 
     activeConversation = conversation;
+    activeGroup = conversation.isGroup ? conversation : null;
 
     $("#chatPlaceholder").classList.add("hidden");
     $("#activeChat").classList.remove("hidden");
@@ -403,8 +481,9 @@ async function openConversation(conversation) {
     $("#chatAvatar").textContent =
         conversation.contact_username.charAt(0).toUpperCase();
 
-    $("#chatConnection").textContent = "NEXUS conversation";
-
+$("#chatConnection").textContent = conversation.isGroup
+    ? `Group · ${conversation.member_count} members`
+    : "NEXUS conversation";
     const layout = $(".chat-layout");
 
     if (window.innerWidth <= 650) {
@@ -526,19 +605,19 @@ function renderMessage(message) {
         const status = document.createElement("span");
         status.className = "message-status";
 
-        if (message.read_at) {
-            status.textContent = "✓✓";
-            status.classList.add("is-read");
-            status.setAttribute("aria-label", "Read");
-        } else if (message.delivered_at) {
-            status.textContent = "✓✓";
-            status.classList.add("is-delivered");
-            status.setAttribute("aria-label", "Delivered");
-        } else {
-            status.textContent = "✓";
-            status.classList.add("is-sent");
-            status.setAttribute("aria-label", "Sent");
-        }
+if (message.read_at) {
+    status.textContent = "✓✓";
+    status.classList.add("is-read");
+    status.setAttribute("aria-label", "Read");
+} else if (message.delivered_at) {
+    status.textContent = "✓✓";
+    status.classList.add("is-delivered");
+    status.setAttribute("aria-label", "Delivered");
+} else {
+    status.textContent = "✓";
+    status.classList.add("is-sent");
+    status.setAttribute("aria-label", "Sent");
+}
 
         element.appendChild(status);
     }
@@ -580,11 +659,14 @@ $("#messageForm").addEventListener("submit", async (event) => {
             }
         );
 
-        input.value = "";
+input.value = "";
 
-        await loadConversations();
-
-    } catch (error) {
+if (activeGroup) {
+    await loadGroups();
+} else {
+    await loadConversations();
+}
+     } catch (error) {
         showToast(error.message);
     } finally {
         button.disabled = false;
@@ -677,7 +759,8 @@ function connectWebSocket() {
                     );
                 }
 
-                loadConversations();
+loadConversations();
+loadGroups();
             }
 
             if (
@@ -782,7 +865,10 @@ $("#searchChat").addEventListener("input", (event) => {
     });
 });
 
-$("#refreshChats").addEventListener("click", loadConversations);
+$("#refreshChats").addEventListener("click", async () => {
+    await loadConversations();
+    await loadGroups();
+});
 
 // ==========================================
 // CONTACTS
@@ -816,6 +902,271 @@ addContactForm.addEventListener("submit", async (event) => {
         button.disabled = false;
     }
 });
+
+
+// ==========================================
+// USER INVITATIONS
+// ==========================================
+
+const generateUserInvitation = $("#generateUserInvitation");
+const userInvitationOutput = $("#userInvitationOutput");
+const userInvitationLink = $("#userInvitationLink");
+const copyUserInvitation = $("#copyUserInvitation");
+const shareUserInvitation = $("#shareUserInvitation");
+
+let currentUserInvitationLink = "";
+
+if (generateUserInvitation) {
+    generateUserInvitation.addEventListener("click", async () => {
+        generateUserInvitation.disabled = true;
+
+        try {
+            const result = await apiRequest("/api/invitations", {
+                method: "POST",
+                body: JSON.stringify({})
+            });
+
+            if (!result.token) {
+                throw new Error("The server did not return an invitation token.");
+            }
+
+            currentUserInvitationLink =
+                `${window.location.origin}/register.html?invite=${encodeURIComponent(result.token)}`;
+
+            if (userInvitationLink) {
+                userInvitationLink.textContent = currentUserInvitationLink;
+            }
+
+            if (userInvitationOutput) {
+                userInvitationOutput.classList.remove("hidden");
+            }
+
+            showToast("Invitation link created. Share it before it expires.");
+        } catch (error) {
+            showToast(error.message);
+        } finally {
+            generateUserInvitation.disabled = false;
+        }
+    });
+}
+
+if (copyUserInvitation) {
+    copyUserInvitation.addEventListener("click", async () => {
+        if (!currentUserInvitationLink) return;
+
+        try {
+            await navigator.clipboard.writeText(currentUserInvitationLink);
+            showToast("Invitation link copied.");
+        } catch {
+            showToast("Copy failed. Please copy the displayed link manually.");
+        }
+    });
+}
+
+if (shareUserInvitation) {
+    shareUserInvitation.addEventListener("click", async () => {
+        if (!currentUserInvitationLink) return;
+
+        if (!navigator.share) {
+            showToast("Sharing is not supported here. Use Copy Link instead.");
+            return;
+        }
+
+        try {
+            await navigator.share({
+                title: "Join me on NEXUS",
+                text: "Use this link to create your NEXUS account:",
+                url: currentUserInvitationLink
+            });
+        } catch (error) {
+            if (error.name !== "AbortError") {
+                showToast("Could not share the invitation link.");
+            }
+        }
+    });
+}
+
+const createGroupForm = $("#createGroupForm");
+
+createGroupForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const name = $("#groupName").value.trim();
+    const description = $("#groupDescription").value.trim();
+
+    const memberIds = Array.from(
+        $$('input[name="groupMembers"]:checked')
+    ).map((checkbox) => checkbox.value);
+
+    if (!name) {
+        showToast("Enter a group name.");
+        return;
+    }
+
+    if (memberIds.length === 0) {
+        showToast("Select at least one group member.");
+        return;
+    }
+
+    const button = createGroupForm.querySelector(
+        'button[type="submit"]'
+    );
+
+    button.disabled = true;
+
+    try {
+        const result = await apiRequest("/api/groups", {
+            method: "POST",
+            body: JSON.stringify({
+                name,
+                description,
+                memberIds
+            })
+        });
+
+
+
+        createGroupForm.reset();
+        showToast(result.message || "Group created successfully.");
+
+        const newGroup = {
+            ...result.group,
+            role: "owner"
+        };
+
+        showSection("chats", document.querySelector('[data-section="chats"]'));
+        await openGroup(newGroup);
+        await loadGroups();
+        await loadConversations();
+
+
+    } catch (error) {
+        showToast(error.message);
+    } finally {
+        button.disabled = false;
+    }
+});
+
+async function loadGroups() {
+    if (!currentUser) return;
+
+    const container = $("#groupList");
+
+    try {
+        const result = await apiRequest("/api/groups");
+        groups = result.groups || [];
+
+        container.replaceChildren();
+
+        if (!groups.length) {
+            container.textContent = "No groups yet. Create your first group!";
+            return;
+        }
+
+        groups.forEach((group) => {
+            const item = document.createElement("div");
+            item.className = "contact-item";
+
+            const details = document.createElement("div");
+
+            const name = document.createElement("strong");
+            name.textContent = group.name;
+
+            const info = document.createElement("p");
+            info.textContent =
+                `${group.member_count} members · ${group.role}`;
+
+            const description = document.createElement("small");
+            description.textContent = group.description || "";
+
+            details.append(name, info, description);
+            item.appendChild(details);
+
+            item.addEventListener("click", () => {
+                openGroup(group);
+            });
+
+            if (group.role === "owner") {
+                const deleteButton = document.createElement("button");
+                deleteButton.type = "button";
+                deleteButton.textContent = "Delete Group";
+
+                deleteButton.addEventListener("click", async (event) => {
+                    event.stopPropagation();
+
+                    if (!confirm(`Permanently delete "${group.name}" and all its messages?`)) return;
+
+                    try {
+                        await apiRequest(`/api/groups/${group.id}`, {
+                            method: "DELETE"
+                        });
+
+                        if (activeConversation?.id === group.id) {
+                            activeConversation = null;
+                            activeGroup = null;
+                            $("#activeChat").classList.add("hidden");
+                            $("#chatPlaceholder").classList.remove("hidden");
+                        }
+
+                        showToast("Group deleted successfully.");
+                        await loadGroups();
+                        await loadConversations();
+                    } catch (error) {
+                        showToast(error.message);
+                    }
+                });
+
+                item.appendChild(deleteButton);
+            }
+
+            container.appendChild(item);
+        });
+
+    } catch (error) {
+        container.textContent = error.message;
+    }
+}
+$("#refreshGroups").addEventListener("click", () => {
+    loadGroups();
+});
+
+async function loadGroupContacts() {
+    if (!currentUser) return;
+
+    const container = $("#groupContactList");
+
+    try {
+        const result = await apiRequest("/api/contacts");
+        groupContacts = result.contacts || [];
+
+        container.replaceChildren();
+
+        if (!groupContacts.length) {
+            container.textContent =
+                "Add and accept contacts before creating a group.";
+            return;
+        }
+
+        groupContacts.forEach((contact) => {
+            const label = document.createElement("label");
+            label.className = "contact-item";
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.value = contact.id;
+            checkbox.name = "groupMembers";
+
+            const name = document.createElement("span");
+            name.textContent = contact.username;
+
+            label.append(checkbox, name);
+            container.appendChild(label);
+        });
+
+    } catch (error) {
+        container.textContent = error.message;
+    }
+}
 
 async function loadContacts() {
     if (!currentUser) return;

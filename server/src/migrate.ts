@@ -1,8 +1,10 @@
+
 import { readFile } from "node:fs/promises";
 import { getPool } from "./database.js";
 
 async function migrate() {
   const pool = await getPool();
+  const client = await pool.connect();
 
   try {
     const schema = await readFile(
@@ -10,17 +12,25 @@ async function migrate() {
       "utf8"
     );
 
-    await pool.query("BEGIN");
+    console.log("\nStarting NEXUS database migration...");
+
+    await client.query("BEGIN");
 
     try {
-      await pool.query(schema);
-      await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ");
-      await pool.query("COMMIT");
+      await client.query(schema);
+
+      await client.query(`
+        ALTER TABLE messages
+        ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ
+      `);
+
+      await client.query("COMMIT");
 
       console.log("\nNEXUS DATABASE MIGRATION SUCCESSFUL!");
-      console.log("Created or verified all five tables.");
+      console.log("All six tables created or verified.");
+      console.log("Group roles and group details are ready.");
     } catch (error) {
-      await pool.query("ROLLBACK");
+      await client.query("ROLLBACK");
       throw error;
     }
   } catch (error) {
@@ -28,8 +38,13 @@ async function migrate() {
 
     if (error instanceof Error) {
       console.error(error.message);
+    } else {
+      console.error(error);
     }
+
+    process.exitCode = 1;
   } finally {
+    client.release();
     await pool.end();
   }
 }

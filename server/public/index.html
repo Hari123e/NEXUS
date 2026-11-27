@@ -68,9 +68,6 @@
         <button class="nav-btn" data-section="groups" type="button">
           <span>◉</span> Groups
         </button>
-        <button class="nav-btn" data-section="calls" type="button">
-          <span>⌕</span> Calls
-        </button>
         <button class="nav-btn" data-section="settings" type="button">
           <span>⚙</span> Settings
         </button>
@@ -158,6 +155,36 @@
 
       <!-- CONTACTS -->
       <section id="contacts" class="content-section hidden">
+<div class="section-card">
+  <h3>Invite someone to NEXUS</h3>
+  <p class="section-description">
+    Invite a friend using a one-time registration link.
+    The link expires after 72 hours.
+  </p>
+
+  <button
+    id="generateUserInvitation"
+    class="primary-btn"
+    type="button">
+    Generate Invitation Link
+  </button>
+
+  <div id="userInvitationOutput" class="hidden">
+    <p>Your invitation link:</p>
+    <code id="userInvitationLink"></code>
+
+    <div class="invitation-actions">
+      <button id="copyUserInvitation" type="button">
+        Copy Link
+      </button>
+
+      <button id="shareUserInvitation" type="button">
+        Share
+      </button>
+    </div>
+  </div>
+</div>
+
         <div class="section-card">
           <h3>Find people</h3>
           <p class="section-description">Connect using a NEXUS username.</p>
@@ -192,23 +219,63 @@
         </div>
       </section>
 
-      <!-- GROUPS -->
-      <section id="groups" class="content-section hidden">
-        <div class="section-card coming-soon">
-          <div class="placeholder-logo">◉</div>
-          <h3>Groups are coming soon</h3>
-          <p>Group conversations will be introduced after direct messaging is complete.</p>
-        </div>
-      </section>
 
-      <!-- CALLS -->
-      <section id="calls" class="content-section hidden">
-        <div class="section-card coming-soon">
-          <div class="placeholder-logo">⌕</div>
-          <h3>Calls are coming soon</h3>
-          <p>Voice and video communication will be added in a future update.</p>
+<!-- GROUPS -->
+<section id="groups" class="content-section hidden">
+
+  <div class="section-card">
+    <div class="panel-heading">
+      <div>
+        <h3>My Groups</h3>
+        <p class="section-description">Your group conversations</p>
+      </div>
+      <button id="refreshGroups" class="icon-btn" type="button">
+        ↻
+      </button>
+    </div>
+
+    <div id="groupList" class="contact-list">
+      <p class="contact-muted">Loading groups...</p>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <h3>Create a Group</h3>
+    <p class="section-description">
+      Start a conversation with your accepted contacts.
+    </p>
+
+    <form id="createGroupForm" class="add-contact-form">
+      <input
+        id="groupName"
+        type="text"
+        maxlength="50"
+        placeholder="Group name"
+        required
+      >
+
+      <input
+        id="groupDescription"
+        type="text"
+        maxlength="250"
+        placeholder="Description (optional)"
+      >
+
+      <div>
+        <h4>Select Members</h4>
+        <div id="groupContactList" class="contact-list">
+          <p class="contact-muted">Loading contacts...</p>
         </div>
-      </section>
+      </div>
+
+      <button class="primary-btn" type="submit">
+        Create Group
+      </button>
+    </form>
+  </div>
+
+</section>
+
 
       <!-- SETTINGS -->
       <section id="settings" class="content-section hidden">

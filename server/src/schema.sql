@@ -253,11 +253,29 @@ CREATE TABLE IF NOT EXISTS conversation_members (
     last_read_at TIMESTAMPTZ,
     left_at TIMESTAMPTZ,
 
+    role VARCHAR(20) NOT NULL DEFAULT 'member'
+        CHECK (role IN ('owner', 'admin', 'member')),
+
     PRIMARY KEY (conversation_id, user_id)
 );
 
 CREATE INDEX IF NOT EXISTS conversation_members_user_index
 ON conversation_members (user_id);
+
+-- Add role to existing databases safely
+ALTER TABLE conversation_members
+ADD COLUMN IF NOT EXISTS role VARCHAR(20) NOT NULL DEFAULT 'member'
+CHECK (role IN ('owner', 'admin', 'member'));
+
+-- Group-specific information
+CREATE TABLE IF NOT EXISTS group_details (
+    conversation_id UUID PRIMARY KEY
+        REFERENCES conversations(id) ON DELETE CASCADE,
+    name VARCHAR(50) NOT NULL,
+    description VARCHAR(250) NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 
 -- ==========================================

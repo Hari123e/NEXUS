@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 import { createHash, randomBytes } from "node:crypto";
 import { getPool } from "../database.js";
@@ -9,11 +8,28 @@ function hashToken(token: string): Buffer {
   return createHash("sha256").update(token).digest();
 }
 
-// CREATE INVITATION
-router.post("/", async (req, res) => {
+// CREATE INVITATION — shared by users and admins
+export async function createInvitationHandler(req: any, res: any) {
   const maxUses = req.body?.maxUses ?? 1;
   const expiresInHours = req.body?.expiresInHours ?? 72;
-  const admin = res.locals.admin;
+
+  // Admin middleware sets admin; shared middleware sets actor.
+  const actor = res.locals.actor ?? res.locals.admin;
+
+  if (!actor) {
+    return res.status(401).json({
+      error: "Authentication required."
+    });
+  }
+
+  // Normal users can only create one-use invitations.
+  const isAdmin = actor.role === "super_admin";
+
+  if (!isAdmin && maxUses !== 1) {
+    return res.status(400).json({
+      error: "User invitations can only be used once."
+    });
+  }
 
   if (
     !Number.isInteger(maxUses) ||
@@ -28,10 +44,11 @@ router.post("/", async (req, res) => {
   if (
     !Number.isInteger(expiresInHours) ||
     expiresInHours < 1 ||
-    expiresInHours > 720
+    expiresInHours > 720 ||
+    (!isAdmin && expiresInHours > 72)
   ) {
     return res.status(400).json({
-      error: "Expiry must be between 1 and 720 hours."
+      error: "Invalid invitation expiry."
     });
   }
 
@@ -53,7 +70,7 @@ router.post("/", async (req, res) => {
            NOW() + ($4 * INTERVAL '1 hour')
          )
          RETURNING id, max_uses, expires_at, created_at`,
-        [tokenHash, admin.id, maxUses, expiresInHours]
+        [tokenHash, actor.id, maxUses, expiresInHours]
       );
 
       await client.query(
@@ -61,7 +78,7 @@ router.post("/", async (req, res) => {
          (actor_user_id, action, details)
          VALUES ($1, $2, $3)`,
         [
-          admin.id,
+          actor.id,
           "invitation_created",
           JSON.stringify({
             invitationId: result.rows[0].id,
@@ -93,7 +110,10 @@ router.post("/", async (req, res) => {
       error: "Could not create invitation."
     });
   }
-});
+}
+
+// Admin invitation routes are protected by requireAdmin in admin.ts.
+router.post("/", createInvitationHandler);
 
 // LIST INVITATIONS
 router.get("/", async (_req, res) => {
@@ -102,14 +122,16 @@ router.get("/", async (_req, res) => {
 
     const result = await pool.query(
       `SELECT
-         id,
-         max_uses,
-         uses,
-         expires_at,
-         revoked_at,
-         created_at
-       FROM invitations
-       ORDER BY created_at DESC
+         i.id,
+         i.max_uses,
+         i.uses,
+         i.expires_at,
+         i.revoked_at,
+         i.created_at,
+         u.username AS created_by_username
+       FROM invitations i
+       LEFT JOIN users u ON u.id = i.created_by
+       ORDER BY i.created_at DESC
        LIMIT 100`
     );
 
@@ -130,6 +152,12 @@ router.get("/", async (_req, res) => {
 router.post("/:id/revoke", async (req, res) => {
   const { id } = req.params;
   const admin = res.locals.admin;
+
+  if (!admin) {
+    return res.status(403).json({
+      error: "Super Admin access required."
+    });
+  }
 
   if (
     typeof id !== "string" ||
@@ -198,4 +226,3 @@ router.post("/:id/revoke", async (req, res) => {
 });
 
 export default router;
-

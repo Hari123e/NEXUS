@@ -10,9 +10,12 @@ import { rateLimit } from "express-rate-limit";
 import authRouter from "./routes/auth.js";
 import cookieParser from "cookie-parser";
 import adminRouter from "./routes/admin.js";
-import contactsRouter from "./routes/contacts.js";
 import conversationsRouter from "./routes/conversations.js";
+import contactsRouter from "./routes/contacts.js";
+import groupsRouter from "./routes/groups.js";
 import { requireUser } from "./middleware/requireUser.js";
+import { requireAuthenticated } from "./middleware/requireAuthenticated.js";
+import { createInvitationHandler } from "./routes/invitations.js";
 
 dotenv.config();
 
@@ -99,9 +102,13 @@ app.get("/api/matrix/config", async (_req, res) => {
 });
 app.use(express.static(publicDir));
 app.use("/api/auth", authLimiter, authRouter);
+app.post("/api/invitations", requireAuthenticated, createInvitationHandler);
 app.use("/api/admin", adminRouter);
 app.use("/api/contacts", requireUser, contactsRouter);
+app.use("/api/groups", requireUser, groupsRouter);app.use("/api/conversations", requireUser, conversationsRouter);
+app.use("/api/contacts", requireUser, contactsRouter);
 app.use("/api/conversations", requireUser, conversationsRouter);
+app.use("/api/groups", requireUser, groupsRouter);
 
 const httpServer = createServer(app);
 
